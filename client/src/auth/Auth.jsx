@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import api from "../utils/api.js";
-export default function Auth() {
+export default function Auth({setIsLoggedIn}) {
   const [isLogin, setIsLogin] = useState(true);
   const [user, setUser] = useState({
     name: "",
@@ -20,10 +20,12 @@ export default function Auth() {
         const res = await api.post("/auth/login", user);
         console.log("user logged in: ", res.data);
         localStorage.setItem("token", res.data.token);
+        setIsLoggedIn(true);
         window.location.href = "/";
       } catch (e) {
         console.log("error login: ", e?.response?.data?.message);
         setIsLogin(false);
+        setIsLoggedIn(false);
       }
       //register
     } else {
@@ -32,9 +34,11 @@ export default function Auth() {
         const res = await api.post("/auth/register", user);
         console.log("user registered in: ", res.data);
         setIsLogin(true);
+        setIsLoggedIn(true)
       } catch (e) {
         console.log("error register: ", e?.response?.data?.message);
         setIsLogin(true);
+        setIsLoggedIn(false)
       }
     }
   };

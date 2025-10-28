@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import Navbar from "./components/Navbar";
 import AllBlogsFinal from "./components/AllBlogsFinal";
 import { Routes, Route } from "react-router-dom";
@@ -11,9 +12,19 @@ import SingleBlogsFinal from "./pages/SingleBlogsFinal.jsx";
 import { EditBlogs } from "./pages/EditBlogs.jsx";
 import { BlogsComments } from "./pages/BlogsComments.jsx";
 function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const token = localStorage.getItem("token");
+  useEffect(() => {
+    if (token) {
+      setIsLoggedIn(true);
+    }
+  }, [isLoggedIn, token]);
+  useEffect(() => {
+    console.log("app: ", isLoggedIn);
+  }, []);
   return (
     <>
-      <Navbar />
+      <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
       <Routes>
         <Route path="/" element={<AllBlogsFinal />} />
         <Route path="/:id/comments" element={<SingleBlogsFinal />} />
@@ -22,7 +33,12 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/contacts" element={<Contacts />} />
         <Route path="/blogsform" element={<BlogsForm />} />
-        <Route path="/auth" element={<Auth />} />
+        <Route
+          path="/auth"
+          element={
+            <Auth isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+          }
+        />
       </Routes>
     </>
   );
