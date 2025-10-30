@@ -2,12 +2,29 @@ import GoToHomePageButton from "../buttons/GoToHomePageButton";
 import EditButton from "../buttons/EditButton.jsx";
 import DeleteButton from "../buttons/DeleteButton.jsx";
 
-export const SingleBlogsCards = ({ blogs }) => {
+export const SingleBlogsCards = ({ blogs, user }) => {
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    return date.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
   };
-
+  const currentUser = JSON.parse(localStorage.getItem("user") || "null"); // ✅ shorter, safe version
+  // console.log("current user:", currentUser?._id);
+  // const storedUser = localStorage.getItem("user");
+  // let currentUser = null;
+  // if (storedUser && storedUser !== "undefined") {
+  //   try {
+  //     currentUser = JSON.parse(storedUser);
+  //   } catch (err) {
+  //     console.error("Error parsing user:", err);
+  //     currentUser = null;
+  //   }
+  // }
+  // console.log("need this", user);
+  console.log(user, "===", currentUser?._id);
   return (
     <div className="card shadow-lg border-0">
       <img
@@ -16,19 +33,23 @@ export const SingleBlogsCards = ({ blogs }) => {
         alt={blogs?.title}
         style={{ maxHeight: "450px", objectFit: "cover" }}
       />
-
       <div className="card-body p-4 p-md-5">
         <div className="mb-4">
           <h1 className="fw-bold mb-3">{blogs?.title}</h1>
 
           <div className="d-flex flex-wrap align-items-center gap-3 mb-3">
             <div className="d-flex align-items-center">
-              <div className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style={{ width: '40px', height: '40px' }}>
+              <div
+                className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2"
+                style={{ width: "40px", height: "40px" }}
+              >
                 {blogs?.author?.charAt(0).toUpperCase()}
               </div>
               <div>
                 <div className="fw-semibold small">By {blogs?.author}</div>
-                <small className="text-muted">{formatDate(blogs?.createdAt)}</small>
+                <small className="text-muted">
+                  {formatDate(blogs?.createdAt)}
+                </small>
               </div>
             </div>
 
@@ -51,8 +72,12 @@ export const SingleBlogsCards = ({ blogs }) => {
         <hr className="my-4" />
 
         <div className="d-flex flex-wrap gap-2">
-          <EditButton id={blogs._id} />
-          <DeleteButton />
+          {currentUser?._id === user && (
+            <>
+              <EditButton id={blogs._id} />
+              <DeleteButton />
+            </>
+          )}
           <GoToHomePageButton />
         </div>
       </div>

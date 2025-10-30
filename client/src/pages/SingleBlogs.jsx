@@ -4,6 +4,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import api from "../utils/api";
 import { SingleBlogsCards } from "../cards/SingleBlogsCards";
 export const SingleBlogs = ({ setID }) => {
+  const [user, setUser] = useState("")
   const [blogs, setBlogs] = useState(null);
   const { id } = useParams();
   useEffect(() => {
@@ -17,6 +18,7 @@ export const SingleBlogs = ({ setID }) => {
       try {
         const res = await api.get(`/blogs/${id}/comments`);
         console.log("single blog: ", res?.data);
+        setUser(res?.data?.user?._id)
         setBlogs(res?.data);
       } catch (error) {
         console.log(error?.response?.data, "Single Blogs");
@@ -30,7 +32,7 @@ export const SingleBlogs = ({ setID }) => {
       <div className="card shadow-lg border-0 rounded-4">
         {blogs ? (
           <>
-            <SingleBlogsCards blogs={blogs} />
+            <SingleBlogsCards blogs={blogs} user={user}/>
           </>
         ) : (
           "Loading..."

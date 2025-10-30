@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import api from "../utils/api.js";
-export default function Auth({setIsLoggedIn}) {
+import { useNavigate } from "react-router-dom";
+export default function Auth({ setIsLoggedIn }) {
+  const navigate = useNavigate()
   const [isLogin, setIsLogin] = useState(true);
   const [user, setUser] = useState({
     name: "",
@@ -20,8 +22,9 @@ export default function Auth({setIsLoggedIn}) {
         const res = await api.post("/auth/login", user);
         console.log("user logged in: ", res.data);
         localStorage.setItem("token", res.data.token);
+        localStorage.setItem("user", JSON.stringify(res.data.user));
         setIsLoggedIn(true);
-        window.location.href = "/";
+        navigate("/")
       } catch (e) {
         console.log("error login: ", e?.response?.data?.message);
         setIsLogin(false);
@@ -34,11 +37,11 @@ export default function Auth({setIsLoggedIn}) {
         const res = await api.post("/auth/register", user);
         console.log("user registered in: ", res.data);
         setIsLogin(true);
-        setIsLoggedIn(true)
+        setIsLoggedIn(true);
       } catch (e) {
         console.log("error register: ", e?.response?.data?.message);
         setIsLogin(true);
-        setIsLoggedIn(false)
+        setIsLoggedIn(false);
       }
     }
   };
