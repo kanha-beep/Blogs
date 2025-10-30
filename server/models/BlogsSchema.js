@@ -1,5 +1,5 @@
 import * as mongoose from 'mongoose'
-import { type } from 'os'
+import Comment from "../models/CommentsSchema.js";
 const blogsSchema = new mongoose.Schema({
     title: {
         type: String,
@@ -28,4 +28,10 @@ const blogsSchema = new mongoose.Schema({
         ref: 'Comment'
     }]
 }, { timestamps: true, strict: false })
+blogsSchema.post("findOneAndDelete", async function (doc) {
+    if (doc) {
+        await Comment.deleteMany({ _id: { $in: doc.comments } });
+        console.log("All related comments deleted!");
+    }
+});
 export const Blog = mongoose.model("Blog", blogsSchema)
