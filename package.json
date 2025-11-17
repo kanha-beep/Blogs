@@ -1,0 +1,24 @@
+{
+  "name": "blogs",
+  "version": "1.0.0",
+  "description": "A blog application with React frontend and Express backend",
+  "main": "server/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "server:dev": "cd server && npm run dev",
+    "client:dev": "cd client && npm run dev",
+    "server:start": "cd server && node index.js",
+    "client:build": "cd client && npm run build",
+    "client:preview": "cd client && npm run preview",
+    "build": "npm run client:build",
+    "start": "npm run server:start",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install"
+  },
+  "keywords": ["blog", "react", "express", "mongodb"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}
