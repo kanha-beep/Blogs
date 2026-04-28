@@ -1,24 +1,35 @@
+"use client";
+
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../utils/api";
+import { useToast } from "../components/ToastProvider.jsx";
+import { getErrorMessage } from "../utils/getErrorMessage.js";
 
 export default function DeleteButton() {
   const navigate = useNavigate();
   const { id } = useParams();
-  // console.log("id for delete: ", id);
+  const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
+
   const deleteBlogs = async () => {
     try {
-      const res = await api.delete(`/blogs/${id}/delete`);
-      console.log("delete blog: ", res?.data);
+      setLoading(true);
+      await api.delete(`/blogs/${id}/delete`);
       navigate("/");
     } catch (e) {
-      alert(e?.response?.data?.message);
+      showToast({ title: "Delete failed", message: getErrorMessage(e) });
+      setLoading(false);
     }
   };
+
   return (
-    <div>
-      <button className="btn btn-primary my-1" onClick={deleteBlogs}>
-        Delete
-      </button>
-    </div>
+    <button
+      disabled={loading}
+      className="w-full rounded-2xl border border-[#f0d49e] bg-[#fff1cd] px-4 py-3 text-sm font-medium text-[#8b5a2b] transition hover:bg-[#fde8b7] sm:w-auto"
+      onClick={deleteBlogs}
+    >
+      {loading ? "Delete story..." : "Delete story"}
+    </button>
   );
 }

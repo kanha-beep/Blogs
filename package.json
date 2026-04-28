@@ -5,7 +5,8 @@
   "main": "server/index.js",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "dev": "npm --prefix client run dev",
+    "dev:legacy": "concurrently \"npm --prefix server run dev\" \"npm --prefix client run dev:client\"",
     "server": "npm --prefix server run dev",
     "client": "npm --prefix client run dev",
     "build": "npm --prefix client install && npm --prefix client run build",

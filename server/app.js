@@ -1,6 +1,5 @@
 import dotenv from "dotenv"
 dotenv.config()
-import cookieParser from "cookie-parser"
 import cors from "cors"
 import express from "express"
 import path from "path";
@@ -8,17 +7,35 @@ import AuthRoutes from "./routes/AuthRoutes.js"
 import BlogsRoutes from "./routes/BlogsRoutes.js"
 import CommentsRoutes from "./routes/CommentsRoutes.js"
 import { connectDB } from "./utils/db.js"
+
 const app = express()
-app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:5173", credentials: true, methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"] }))
+app.set("trust proxy", 1)
+const allowedOrigins = (process.env.CLIENT_URL || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Origin not allowed by CORS"));
+    },
+    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+)
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(express.static("public"))
-app.use(cookieParser())
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 connectDB()
-app.use("/api/auth", AuthRoutes)
-app.use("/api/blogs", BlogsRoutes)
-app.use("/api/blogs", CommentsRoutes)
+app.use("/auth", AuthRoutes)
+app.use("/blogs", BlogsRoutes)
+app.use("/blogs", CommentsRoutes)
 
 app.use((req, res, next) => {
   console.log(req.method, req.url);
@@ -26,7 +43,7 @@ app.use((req, res, next) => {
 });
 
 app.use((error, req, res, next) => {
-    const { status = 500, message = "Something went wrong" } = error;
-    res.status(status).json({ message })
+  const { status = 500, message = "Something went wrong" } = error;
+  res.status(status).json({ message })
 })
 export default app

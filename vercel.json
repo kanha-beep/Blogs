@@ -2,5 +2,11 @@
   "buildCommand": "npm --prefix client install && npm --prefix client run build",
   "outputDirectory": "client/dist",
   "installCommand": "npm install && npm --prefix server install && npm --prefix client install",
-  "serverlessFunctionRegion": "us-east-1"
+  "serverlessFunctionRegion": "us-east-1",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
