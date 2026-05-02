@@ -2,6 +2,7 @@ import { connectDB } from "../../../../../src/server/db.js";
 import { ApiError, errorResponse, json, normalizeCategory, verifyRequest } from "../../../../../src/server/api.js";
 import { uploadToCloudinary } from "../../../../../src/server/cloudinary.js";
 import { Blog } from "../../../../../src/server/models/Blog.js";
+import { News } from "../../../../../src/server/models/News.js";
 
 async function assertBlogOwner(id, userId) {
   const blog = await Blog.findById(id).populate("user");
@@ -35,8 +36,10 @@ export async function PATCH(request, { params }) {
     const title = String(formData.get("title") || "").trim();
     const content = String(formData.get("content") || "").trim();
     const author = String(formData.get("author") || "").trim();
+    const sourceUrl = String(formData.get("sourceUrl") || "").trim();
     const category = normalizeCategory(formData.getAll("category"));
     const image = formData.get("image");
+    const removeImage = String(formData.get("removeImage") || "").toLowerCase() === "true";
 
     if (!title || !content || !author || category.length === 0) {
       throw new ApiError(400, "All fields are required");
@@ -55,12 +58,21 @@ export async function PATCH(request, { params }) {
         content,
         author,
         category,
-        url: uploadedImage?.secure_url || existingBlog.url || "",
+        url: removeImage ? "" : uploadedImage?.secure_url || existingBlog.url || "",
+        sourceUrl: sourceUrl || existingBlog.sourceUrl || "",
       },
       { new: true }
     );
 
     if (!blog) throw new ApiError(404, "No blog found");
+
+    const nextSourceUrl = sourceUrl || existingBlog.sourceUrl || "";
+    if (nextSourceUrl) {
+      await News.updateOne(
+        { $or: [{ link: nextSourceUrl }, { title }] },
+        { $set: { blogId: blog._id } }
+      );
+    }
 
     return json({ message: "Updated Successfully", blog });
   } catch (error) {

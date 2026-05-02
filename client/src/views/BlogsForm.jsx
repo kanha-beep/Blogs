@@ -2,10 +2,11 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import api from "../utils/api.js";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useSearchParams } from "next/navigation";
 import { useToast } from "../components/ToastProvider.jsx";
 import { getErrorMessage } from "../utils/getErrorMessage.js";
+import { useAuth } from "../auth/AuthContext.jsx";
 
 const CATEGORY_OPTIONS = [
   "design",
@@ -26,7 +27,9 @@ const CATEGORY_OPTIONS = [
 export const BlogsForm = () => {
   const { showToast } = useToast();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const searchParams = useSearchParams();
+  const { isLoggedIn, authReady } = useAuth();
   const [importing, setImporting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const prefilledCategories = useMemo(
@@ -84,8 +87,25 @@ export const BlogsForm = () => {
     }));
   };
 
+  const redirectToLogin = () => {
+    navigate("/auth", {
+      replace: true,
+      state: { from: `${location.pathname}${location.search}${location.hash || ""}` },
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (authReady && !isLoggedIn) {
+      showToast({
+        title: "Sign in required",
+        message: "Please sign in to publish your blog.",
+      });
+      redirectToLogin();
+      return;
+    }
+
     if (
       !formData.title.trim() ||
       !formData.author.trim() ||
@@ -122,27 +142,36 @@ export const BlogsForm = () => {
     }
   };
 
-  const handleImportBlogs = async () => {
-    try {
-      setImporting(true);
-      const res = await api.post("/blogs/import-news", {
-        query: newsImport.query,
-        category: newsImport.category,
-        limit: newsImport.limit,
-        author: formData.author,
-      });
-      showToast({
-        title: "News imported",
-        message: res?.data?.message || "Blogs created from news successfully",
-        type: "success",
-      });
-      navigate("/");
-    } catch (e) {
-      showToast({ title: "Import failed", message: getErrorMessage(e) });
-    } finally {
-      setImporting(false);
-    }
-  };
+  // const handleImportBlogs = async () => {
+  //   if (authReady && !isLoggedIn) {
+  //     showToast({
+  //       title: "Sign in required",
+  //       message: "Please sign in to import blogs from news.",
+  //     });
+  //     redirectToLogin();
+  //     return;
+  //   }
+
+  //   try {
+  //     setImporting(true);
+  //     const res = await api.post("/blogs/import-news", {
+  //       query: newsImport.query,
+  //       category: newsImport.category,
+  //       limit: newsImport.limit,
+  //       author: formData.author,
+  //     });
+  //     showToast({
+  //       title: "News imported",
+  //       message: res?.data?.message || "Blogs created from news successfully",
+  //       type: "success",
+  //     });
+  //     navigate("/");
+  //   } catch (e) {
+  //     showToast({ title: "Import failed", message: getErrorMessage(e) });
+  //   } finally {
+  //     setImporting(false);
+  //   }
+  // };
 
   const handleCategory = (e) => {
     const { value } = e.target;
@@ -169,66 +198,13 @@ export const BlogsForm = () => {
             <div className="card border-0 shadow-sm">
               <div className="card-body p-4 p-md-5">
                 <h3 className="text-center mb-4 fw-bold">Create New Blog Post</h3>
-
-                <div className="mb-4 rounded-3 border bg-light p-3">
-                  <div className="mb-3">
-                    <h5 className="mb-1 fw-bold">Import blogs from news API</h5>
-                    <p className="mb-0 text-muted">
-                      News title aur description ko combine karke har article ka auto blog create
-                      hoga. OpenAI ki zarurat nahi hai.
-                    </p>
+                {!isLoggedIn && (
+                  <div className="mb-4 rounded-3 border border-warning-subtle bg-warning bg-opacity-10 p-3 text-center text-muted">
+                    You can review or edit this draft now. Sign in is only needed when you publish or import.
                   </div>
+                )}
 
-                  <div className="row g-3">
-                    <div className="col-12 col-md-5">
-                      <label className="form-label fw-semibold">Topic keyword</label>
-                      <input
-                        type="text"
-                        name="query"
-                        placeholder="AI, startup, cricket..."
-                        value={newsImport.query}
-                        onChange={handleNewsImportChange}
-                        className="form-control"
-                      />
-                    </div>
-
-                    <div className="col-6 col-md-4">
-                      <label className="form-label fw-semibold">Category</label>
-                      <input
-                        type="text"
-                        name="category"
-                        placeholder="news"
-                        value={newsImport.category}
-                        onChange={handleNewsImportChange}
-                        className="form-control"
-                      />
-                    </div>
-
-                    <div className="col-6 col-md-3">
-                      <label className="form-label fw-semibold">Count</label>
-                      <input
-                        type="number"
-                        name="limit"
-                        min="1"
-                        max="10"
-                        value={newsImport.limit}
-                        onChange={handleNewsImportChange}
-                        className="form-control"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-3">
-                    <button
-                      type="button"
-                      onClick={handleImportBlogs}
-                      disabled={importing}
-                      className="btn btn-dark px-4 fw-semibold"
-                    >
-                      {importing ? "Importing blogs..." : "Generate blogs from news"}
-                    </button>
-                  </div>
-                </div>
+              
 
                 <form onSubmit={handleSubmit}>
                   <div className="row mb-3">
@@ -336,3 +312,62 @@ export const BlogsForm = () => {
 
 
 
+  // <div className="mb-4 rounded-3 border bg-light p-3">
+  //                 <div className="mb-3">
+  //                   <h5 className="mb-1 fw-bold">Import blogs from news API</h5>
+  //                   <p className="mb-0 text-muted">
+  //                     News title aur description ko combine karke har article ka auto blog create
+  //                     hoga. OpenAI ki zarurat nahi hai.
+  //                   </p>
+  //                 </div>
+
+  //                 <div className="row g-3">
+  //                   <div className="col-12 col-md-5">
+  //                     <label className="form-label fw-semibold">Topic keyword</label>
+  //                     <input
+  //                       type="text"
+  //                       name="query"
+  //                       placeholder="AI, startup, cricket..."
+  //                       value={newsImport.query}
+  //                       onChange={handleNewsImportChange}
+  //                       className="form-control"
+  //                     />
+  //                   </div>
+
+  //                   <div className="col-6 col-md-4">
+  //                     <label className="form-label fw-semibold">Category</label>
+  //                     <input
+  //                       type="text"
+  //                       name="category"
+  //                       placeholder="news"
+  //                       value={newsImport.category}
+  //                       onChange={handleNewsImportChange}
+  //                       className="form-control"
+  //                     />
+  //                   </div>
+
+  //                   <div className="col-6 col-md-3">
+  //                     <label className="form-label fw-semibold">Count</label>
+  //                     <input
+  //                       type="number"
+  //                       name="limit"
+  //                       min="1"
+  //                       max="10"
+  //                       value={newsImport.limit}
+  //                       onChange={handleNewsImportChange}
+  //                       className="form-control"
+  //                     />
+  //                   </div>
+  //                 </div>
+
+  //                 <div className="mt-3">
+  //                   <button
+  //                     type="button"
+  //                     onClick={handleImportBlogs}
+  //                     disabled={importing}
+  //                     className="btn btn-dark px-4 fw-semibold"
+  //                   >
+  //                     {importing ? "Importing blogs..." : "Generate blogs from news"}
+  //                   </button>
+  //                 </div>
+  //               </div>
